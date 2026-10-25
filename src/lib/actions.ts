@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { nanoid } from "nanoid";
+import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import { assertHtmlSize, extractTitle } from "@/lib/html";
 import type { Anchor, CommentRow, CommentStatus } from "@/lib/types";
@@ -25,7 +26,7 @@ export async function signInWithMagicLink(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const origin = getAppUrl();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {

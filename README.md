@@ -40,15 +40,20 @@ Open [http://localhost:3000](http://localhost:3000), sign in with magic link, up
 
 ## Deploy (Vercel)
 
-```bash
-npx vercel link
-npx vercel env add NEXT_PUBLIC_SUPABASE_URL
-npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
-npx vercel env add NEXT_PUBLIC_APP_URL
-npx vercel --prod
-```
+In the Vercel project → **Settings → Environment Variables** (Production + Preview), set:
 
-Then set `NEXT_PUBLIC_APP_URL` to the production URL and add that URL + `/auth/callback` in Supabase Auth settings.
+| Name | Value |
+|------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://uecfuttovhkpqwouhmde.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → **anon public** (JWT `eyJ…`, not the service role) |
+| `NEXT_PUBLIC_APP_URL` | `https://margin-othel.vercel.app` (**no** trailing slash) |
+
+Redeploy after changing env vars (`npx vercel --prod` or Redeploy in the dashboard).
+
+In Supabase → **Authentication → URL Configuration**:
+
+- Site URL: `https://margin-othel.vercel.app`
+- Redirect URLs: `https://margin-othel.vercel.app/auth/callback` (and `http://localhost:3000/auth/callback` for local)
 
 ## Roles
 

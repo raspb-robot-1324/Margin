@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { DocumentWorkspace } from "@/components/DocumentWorkspace";
+import { getAppUrl } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/server";
 import type { CommentRow, DocumentRow, DocumentVersionRow } from "@/lib/types";
 
@@ -70,7 +71,7 @@ export default async function DocumentPage({ params }: Props) {
       comments={(comments || []) as CommentRow[]}
       shareToken={share?.token ?? null}
       ownerName={ownerName}
-      appUrl={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}
+      appUrl={getAppUrl()}
     />
   );
 }
