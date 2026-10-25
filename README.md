@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Margin
 
-## Getting Started
+Share HTML documents with CSS intact. You edit when signed in. Mentors open a secret link, read the real layout, and leave comments — no account required.
 
-First, run the development server:
+## Stack
+
+- Next.js App Router
+- Supabase Auth (magic link), Postgres, Storage
+- Monaco editor (owner source view)
+
+## Setup
+
+1. Copy env:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Fill values from your Supabase project (Dashboard → Project Settings → API):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_APP_URL` (local: `http://localhost:3000`)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Auth redirect URLs (Dashboard → Authentication → URL Configuration):
 
-## Learn More
+- Site URL: `http://localhost:3000` (and your Vercel URL in production)
+- Redirect URLs: `http://localhost:3000/auth/callback`, `https://YOUR_DOMAIN/auth/callback`
 
-To learn more about Next.js, take a look at the following resources:
+4. Database: migrations for tables, RLS, storage bucket, and share RPCs are already applied on the Margin Supabase project. To re-apply on a fresh project, run the SQL from the conversation history / Supabase dashboard SQL editor (profiles, documents, document_versions, share_links, comments, resolve_share_token, list_share_comments, add_share_comment).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Install & run:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000), sign in with magic link, upload an `.html` file (try the Study Rink journal).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy (Vercel)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx vercel link
+npx vercel env add NEXT_PUBLIC_SUPABASE_URL
+npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+npx vercel env add NEXT_PUBLIC_APP_URL
+npx vercel --prod
+```
+
+Then set `NEXT_PUBLIC_APP_URL` to the production URL and add that URL + `/auth/callback` in Supabase Auth settings.
+
+## Roles
+
+| Role | How | Capabilities |
+|------|-----|----------------|
+| Owner | Magic link | Upload, edit HTML, share/revoke links, resolve comments |
+| Mentor | `/s/[token]` | View faithful render, comment on selections, reply |
+
+## Notes
+
+- HTML is stored in `document_versions.content` (also mirrored to Storage when possible).
+- Share access uses security-definer RPCs keyed by token (no public table reads).
+- Re-saving a document marks comment anchors as `orphaned` if the selected text disappeared.

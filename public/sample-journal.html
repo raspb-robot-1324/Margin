@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study Rink — Journal de bord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #12171c;
+      --ink-soft: #3a4550;
+      --muted: #6b7885;
+      --paper: #f2f5f7;
+      --paper-deep: #e4ebf0;
+      --board: #152028;
+      --board-2: #1e2d38;
+      --rink-red: #c8102e;
+      --rink-blue: #3d6e8c;
+      --ice: #d7e4ec;
+      --line: #c5d0d8;
+      --ok: #2a6b4f;
+      --warn: #9a6b16;
+      --rule: 2px solid var(--rink-red);
+      --rule-blue: 2px solid var(--rink-blue);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { font-size: 16px; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 120% 80% at 10% -10%, #dbe7ef 0%, transparent 55%),
+        radial-gradient(ellipse 90% 60% at 100% 0%, #e8eef2 0%, transparent 45%),
+        var(--paper);
+      font-family: "IBM Plex Sans", sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.045;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .page {
+      width: min(820px, calc(100% - 2.5rem));
+      margin: 2.5rem auto 4rem;
+    }
+
+    /* ——— Cover ——— */
+    .cover {
+      background: linear-gradient(165deg, var(--board) 0%, var(--board-2) 55%, #243844 100%);
+      color: #e8eef2;
+      padding: 2.75rem 2.5rem 2.25rem;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2.5rem;
+    }
+
+    .cover::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 6px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--rink-red) 0 48px,
+        #f2f5f7 48px 56px,
+        var(--rink-blue) 56px 104px,
+        #f2f5f7 104px 112px
+      );
+    }
+
+    .cover-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9eb0bd;
+      margin-bottom: 2.5rem;
+    }
+
+    .cover h1 {
+      font-family: "Teko", sans-serif;
+      font-weight: 600;
+      font-size: clamp(3.4rem, 12vw, 5.6rem);
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+      margin: 0 0 0.35rem;
+      text-transform: uppercase;
+    }
+
+    .cover h1 span {
+      color: var(--rink-red);
+    }
+
+    .cover .subtitle {
+      font-family: "Teko", sans-serif;
+      font-weight: 400;
+      font-size: 1.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #b8c9d4;
+      margin: 0 0 2rem;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding-top: 1.35rem;
+    }
+
+    .field label {
+      display: block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7f93a3;
+      margin-bottom: 0.25rem;
+    }
+
+    .field .value {
+      font-size: 1.05rem;
+      font-weight: 500;
+      border-bottom: 1px dashed rgba(255,255,255,0.22);
+      min-height: 1.6em;
+      padding-bottom: 0.15rem;
+    }
+
+    .promise {
+      margin-top: 1.75rem;
+      padding: 0.9rem 1rem;
+      background: rgba(0,0,0,0.22);
+      border-left: 3px solid var(--rink-red);
+      font-size: 0.95rem;
+      color: #c5d4de;
+      max-width: 36rem;
+    }
+
+    .promise strong { color: #fff; font-weight: 600; }
+
+    /* ——— How-to strip ——— */
+    .howto {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.25rem;
+      align-items: start;
+      background: var(--paper-deep);
+      border: 1px solid var(--line);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 2.75rem;
+    }
+
+    .howto .tag {
+      font-family: "Teko", sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--rink-blue);
+      line-height: 1;
+      padding-top: 0.15rem;
+    }
+
+    .howto ol {
+      margin: 0;
+      padding-left: 1.1rem;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+    }
+
+    .howto li { margin-bottom: 0.2rem; }
+    .howto code {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82em;
+      background: rgba(255,255,255,0.65);
+      padding: 0.05em 0.35em;
+    }
+
+    /* ——— Period ——— */
+    .period {
+      margin-bottom: 3.5rem;
+      page-break-before: always;
+    }
+
+    .period:first-of-type { page-break-before: auto; }
+
+    .period-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1rem;
+      align-items: end;
+      border-bottom: var(--rule);
+      padding-bottom: 0.65rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .period-head::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0;
+      bottom: -8px;
+      border-bottom: var(--rule-blue);
+      opacity: 0.55;
+    }
+
+    .period-num {
+      font-family: "Teko", sans-serif;
+      font-weight: 700;
+      font-size: 4.2rem;
+      line-height: 0.8;
+      color: var(--rink-red);
+      letter-spacing: -0.02em;
+    }
+
+    .period-title h2 {
+      font-family: "Teko", sans-serif;
+      font-weight: 600;
+      font-size: 2.4rem;
+      line-height: 1;
+      margin: 0 0 0.15rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .period-title .phase {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--rink-blue);
+    }
+
+    .period-dates {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      text-align: right;
+      color: var(--muted);
+      line-height: 1.4;
+      padding-bottom: 0.35rem;
+    }
+
+    .period-dates strong {
+      display: block;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* ——— Sections ——— */
+    section.block {
+      margin: 1.75rem 0;
+    }
+
+    .block-label {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .block-label h3 {
+      font-family: "Teko", sans-serif;
+      font-weight: 500;
+      font-size: 1.45rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .block-label .idx {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .lede {
+      font-size: 1.02rem;
+      color: var(--ink-soft);
+      max-width: 40rem;
+      margin: 0 0 1rem;
+    }
+
+    /* telegraphic notes */
+    .wire {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .wire li {
+      position: relative;
+      padding: 0.4rem 0 0.4rem 1.1rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wire li:last-child { border-bottom: none; }
+
+    .wire li::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: var(--rink-red);
+      font-weight: 600;
+    }
+
+    .wire .k {
+      color: var(--rink-blue);
+      font-weight: 600;
+    }
+
+    /* competitor table */
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      margin: 0.5rem 0 1rem;
+    }
+
+    .comp-table th {
+      text-align: left;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+      border-bottom: 2px solid var(--ink);
+      padding: 0.45rem 0.5rem 0.5rem 0;
+    }
+
+    .comp-table td {
+      vertical-align: top;
+      padding: 0.7rem 0.55rem 0.7rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .comp-table tr:last-child td { border-bottom: none; }
+
+    .comp-table .name {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .comp-table .name a {
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: 1px solid var(--rink-blue);
+    }
+
+    .comp-table .name a:hover { color: var(--rink-red); }
+
+    .tag-pill {
+      display: inline-block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.12rem 0.4rem;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      margin-top: 0.25rem;
+    }
+
+    .tag-pill.close { border-color: var(--rink-red); color: var(--rink-red); }
+    .tag-pill.adj { border-color: var(--rink-blue); color: var(--rink-blue); }
+    .tag-pill.far { color: var(--muted); }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin-top: 0.75rem;
+    }
+
+    .insight {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--rink-blue);
+      padding: 0.85rem 0.95rem;
+    }
+
+    .insight.take { border-top-color: var(--rink-red); }
+
+    .insight h4 {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 0.4rem;
+      font-weight: 500;
+    }
+
+    .insight p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--ink-soft);
+    }
+
+    /* style board */
+    .style-board {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .style-panel {
+      background: var(--board);
+      color: #d5e0e8;
+      padding: 1.15rem 1.2rem;
+    }
+
+    .style-panel h4 {
+      font-family: "Teko", sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0 0 0.65rem;
+      color: #fff;
+    }
+
+    .style-panel .wire li {
+      border-bottom-color: rgba(255,255,255,0.1);
+      color: #c2d0da;
+    }
+
+    .style-panel .wire li::before { color: var(--rink-red); }
+    .style-panel .wire .k { color: #7eb3d1; }
+
+    .palette {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.45rem;
+      margin-top: 0.85rem;
+    }
+
+    .swatch {
+      aspect-ratio: 1.4 / 1;
+      border: 1px solid rgba(255,255,255,0.12);
+      position: relative;
+    }
+
+    .swatch span {
+      position: absolute;
+      left: 0.3rem; bottom: 0.25rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .swatch.ink { background: #12171c; color: #fff; }
+    .swatch.ice { background: #d7e4ec; color: #12171c; }
+    .swatch.red { background: #c8102e; color: #fff; }
+    .swatch.blue { background: #3d6e8c; color: #fff; }
+
+    /* screenshots */
+    .shots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .shot {
+      border: 1px dashed var(--muted);
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 6px,
+          rgba(61, 110, 140, 0.06) 6px,
+          rgba(61, 110, 140, 0.06) 7px
+        ),
+        #fff;
+      min-height: 9.5rem;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .shot .cap {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .shot .hint {
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+      margin: 0;
+    }
+
+    .shot img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--line);
+    }
+
+    /* obstacles / next */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .callout {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 0.95rem 1rem;
+    }
+
+    .callout.obstacle { border-left: 3px solid var(--warn); }
+    .callout.next { border-left: 3px solid var(--ok); }
+
+    .callout h4 {
+      font-family: "Teko", sans-serif;
+      font-size: 1.25rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 0.5rem;
+    }
+
+    /* empty period template */
+    .period.template {
+      opacity: 0.92;
+    }
+
+    .period.template .period-num { color: var(--muted); }
+
+    .blank-lines {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .blank-lines li {
+      border-bottom: 1px solid var(--line);
+      height: 1.85rem;
+    }
+
+    .stamp {
+      display: inline-block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1.5px solid var(--rink-red);
+      color: var(--rink-red);
+      padding: 0.2rem 0.45rem;
+      transform: rotate(-2deg);
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    footer.doc-foot {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    /* ——— Print / Word export ——— */
+    @media print {
+      body {
+        background: #fff;
+        font-size: 11pt;
+      }
+      body::before { display: none; }
+      .page { width: 100%; margin: 0; }
+      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .period { page-break-inside: avoid; }
+      .howto { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+
+    @media (max-width: 680px) {
+      .cover-grid,
+      .insight-grid,
+      .style-board,
+      .shots,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+      .period-head {
+        grid-template-columns: auto 1fr;
+      }
+      .period-dates {
+        grid-column: 1 / -1;
+        text-align: left;
+      }
+      .page { width: calc(100% - 1.25rem); margin: 1.25rem auto 2.5rem; }
+      .cover { padding: 1.75rem 1.25rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ========== COVER ========== -->
+    <header class="cover">
+      <div class="cover-meta">
+        <span>Projet école · Mentorat</span>
+        <span>Godot 4.6 · 2D pixel · FR</span>
+      </div>
+      <h1>Study <span>Rink</span></h1>
+      <p class="subtitle">Journal de bord</p>
+      <div class="cover-grid">
+        <div class="field">
+          <label>Étudiant</label>
+          <div class="value" contenteditable="true" data-placeholder="Ton nom"></div>
+        </div>
+        <div class="field">
+          <label>Mentor</label>
+          <div class="value" contenteditable="true" data-placeholder="Nom du mentor"></div>
+        </div>
+        <div class="field">
+          <label>Démarrage du journal</label>
+          <div class="value">25 octobre 2026</div>
+        </div>
+        <div class="field">
+          <label>Rythme</label>
+          <div class="value">1 entrée / 2 semaines</div>
+        </div>
+      </div>
+      <p class="promise">
+        <strong>Promesse du jeu :</strong> compagnon d’étude équilibré (focus + organisation + apprentissage).
+        Règle : aucune action d’étude n’est un cul-de-sac — tout crédite la carrière de hockey.
+      </p>
+    </header>
+
+    <aside class="howto">
+      <div class="tag">Mode d’emploi</div>
+      <ol>
+        <li>Dupliquer le bloc « Période type » en bas pour chaque rencontre mentor.</li>
+        <li>Notes télégraphiques — phrases courtes, verbes d’action, dates si possible.</li>
+        <li>Déposer les captures dans <code>journal/captures/</code>, puis les coller dans les cadres.</li>
+        <li>Export Word : ouvrir ce fichier dans Word / Pages / Google Docs → Enregistrer sous <code>.docx</code>, ou <code>Fichier → Imprimer → PDF</code>.</li>
+      </ol>
+    </aside>
+
+    <!-- ========== PÉRIODE 01 — RECHERCHE ========== -->
+    <article class="period" id="periode-01">
+      <header class="period-head">
+        <div class="period-num">01</div>
+        <div class="period-title">
+          <h2>Recherche &amp; cadrage <span class="stamp">En cours</span></h2>
+          <div class="phase">Phase · Veille concurrentielle · Positionnement</div>
+        </div>
+        <div class="period-dates">
+          <strong>25 oct. → ~8 nov. 2026</strong>
+          Rencontre mentor n° ?
+        </div>
+      </header>
+
+      <section class="block">
+        <div class="block-label">
+          <h3>Objectif de période</h3>
+          <span class="idx">01.1</span>
+        </div>
+        <p class="lede">
+          Cartographier les jeux / apps qui se rapprochent de Study Rink, noter ce qu’ils font bien,
+          et clarifier ce qui rend <em>notre</em> boucle unique (étude → carrière hockey).
+        </p>
+        <ul class="wire">
+          <li><span class="k">Livrable mentor :</span> tableau concurrents + 3 insights + features / style prévus</li>
+          <li><span class="k">Méthode :</span> jouer / parcourir 4–6 produits, capturer 1–2 écrans chacun</li>
+          <li><span class="k">Critères :</span> boucle étude↔jeu · rétention · organisation scolaire · ton / art</li>
+        </ul>
+      </section>
+
+      <section class="block">
+        <div class="block-label">
+          <h3>Recherche — jeux &amp; apps similaires</h3>
+          <span class="idx">01.2</span>
+        </div>
+        <p class="lede">
+          Point de départ : <a href="https://www.studyquest.app/games">studyquest.app/games</a>
+          (40+ modes type arcade sur le contenu scolaire). Ci-dessous : ce que j’ai trouvé + suggestions à explorer.
+        </p>
+
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Ce qu’ils font</th>
+              <th>Écart vs Study Rink</th>
+              <th>Proximité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="name"><a href="https://www.studyquest.app/games">StudyQuest</a></div>
+              </td>
+              <td>
+                Upload notes → IA → quiz / flashcards branchés sur des mini-jeux (Boss Battle, Snake, Subway Surfers, Study Siege, Knowledge Factory…).
+                XP, streaks, plans d’étude.
+              </td>
+              <td>
+                Le « jeu » est une peau sur les questions. Pas de carrière persistante, pas de lien organisation scolaire ↔ compétition sport.
+                <em>À regarder :</em> variété des modes, friction d’entrée, feel des streaks.
+              </td>
+              <td><span class="tag-pill close">Proche</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="name"><a href="https://crammit.app/">CRAMMIT</a></div>
+              </td>
+              <td>
+                Génération quiz/cartes depuis fichiers + modes de rétention + arènes multi (Classic Arena, CyberHeist).
+              </td>
+              <td>
+                Très fort sur création de contenu + social. Study Rink = solo / carrière longue, pas live class.
+              </td>
+              <td><span class="tag-pill close">Proche</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="name"><a href="https://flashquest.net/arena">FlashQuest Arena</a></div>
+              </td>
+              <td>
+                Batailles flashcards temps réel (code room, même question, vitesse + exactitude).
+              </td>
+              <td>
+                Inspire l’idée « chaque réponse compte » — déjà dans notre arène d’examen.
+                Pas de meta-progression hors du duel.
+              </td>
+              <td><span class="tag-pill adj">Adjacent</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="name"><a href="https://habitica.com/">Habitica</a></div>
+              </td>
+              <td>
+                Vie réelle → RPG (XP, stuff, HP si on skip). Pixel, parties, boss via tâches.
+              </td>
+              <td>
+                Même famille « productivité gamifiée », mais tâches génériques ≠ SRS / devoirs / examens.
+                <em>À piquer :</em> clarté des récompenses, punition douce vs notre « décrochage sans punition ».
+              </td>
+              <td><span class="tag-pill adj">Adjacent</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="name"><a href="https://www.forestapp.cc/">Forest</a> / Focus Friend</div>
+              </td>
+              <td>
+                Focus timer → récompense visuelle (arbre / bean). Anti-distraction.
+              </td>
+              <td>
+                Un seul pilier (tenir). Chez nous : micro-départ 2 min + forme du jour qui bloque les matchs BOSS.
+              </td>
+              <td><span class="tag-pill adj">Adjacent</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="name"><a href="https://quizlet.com/">Quizlet</a> / Kahoot!</div>
+              </td>
+              <td>
+                Cartes + Live / quiz classe. Standards du marché scolaire.
+              </td>
+              <td>
+                Référence UX flashcards / pression sociale. Aucune boucle carrière. Benchmark import Anki / friction.
+              </td>
+              <td><span class="tag-pill far">Réf.</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="name"><a href="https://www.duolingo.com/">Duolingo</a></div>
+              </td>
+              <td>
+                Leçons courtes, streaks, XP, mascotte culpabilisante, leaderboards.
+              </td>
+              <td>
+                Gold standard addiction / micro-sessions. Domaine fixe (langues). Étudier leur onboarding + plafond quotidien.
+              </td>
+              <td><span class="tag-pill far">Réf.</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="name"><a href="https://stackdai.net/">Stackd</a> / <a href="http://qardex.app/">Qardex</a></div>
+              </td>
+              <td>
+                Upload → cartes / quiz / mini-jeux compétitifs ; courses de decks entre amis.
+              </td>
+              <td>
+                Vague « notes → jeu » saturée. Renforce notre différenciateur : hockey + forme + organisation, pas juste arcade quiz.
+              </td>
+              <td><span class="tag-pill far">Vague</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="insight-grid">
+          <div class="insight take">
+            <h4>Notre angle (à défendre)</h4>
+            <p>
+              Pas « encore un skin de quiz ». Une <strong>carrière de hockey</strong> alimentée par
+              l’étude réelle (SRS, devoirs, focus), avec une règle unique :
+              tout crédite le même entonnoir (<code>CareerLedger</code>).
+            </p>
+          </div>
+          <div class="insight">
+            <h4>Ce que StudyQuest fait mieux (pour l’instant)</h4>
+            <p>
+              Entrée contenu ultra large (PDF → 40 jeux). À noter pour plus tard : génération IA de cartes (L6 prévu),
+              sans diluer la boucle hockey.
+            </p>
+          </div>
+          <div class="insight">
+            <h4>Piège à éviter</h4>
+            <p>
+              Empiler des mini-jeux décoratifs. Chaque surface d’étude doit bouger forme / XP / contrat —
+              sinon on rejoint le pack « arcade quiz ».
+            </p>
+          </div>
+          <div class="insight">
+            <h4>À tester cette période</h4>
+            <p>
+              1 session StudyQuest (Boss Battle + Study Café) · 1 run Habitica · regarder Forest / Focus Friend
+              pour le feel du micro-focus · capturer QuizLearn Live si accessible.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="block-label">
+          <h3>Notes télégraphiques — features à (ré)affirmer</h3>
+          <span class="idx">01.3</span>
+        </div>
+        <p class="lede">
+          Beaucoup est déjà ✅ dans le build. Ci-dessous : ce que je mets en avant pour le mentor + ce qui reste.
+        </p>
+        <ul class="wire">
+          <li><span class="k">Boucle unique :</span> étude → EP → XP attributs + forme + $ + phase carrière + contrat du jour</li>
+          <li><span class="k">SubjectMap :</span> matière scolaire → attribut hockey (mental / patinage / charisme…)</li>
+          <li><span class="k">Focus :</span> micro-départ 2 min (meilleur tarif EP) · reprise après décrochage · pas de punition si honnête</li>
+          <li><span class="k">Organisation :</span> devoirs + agenda 14 j · retard = pression sur la forme</li>
+          <li><span class="k">Apprendre :</span> SRS (fuzzing, sangsues) · import Anki · cram à taux réduit · coaching sujets faibles</li>
+          <li><span class="k">Hockey :</span> hub pixel · matchs 2D / simu · boss division · junior → draft → pro · coach / GM</li>
+          <li><span class="k">Arène examens :</span> chaque réponse = rappel crédité, même en défaite / abandon</li>
+          <li><span class="k">Plafonds :</span> régularité &gt; acharnement (EP dégressifs après plafond souple)</li>
+          <li><span class="k">Suite :</span> L6 génération cartes/quiz IA · polish art · (hors scope : multi, Screen Time, autres sports)</li>
+        </ul>
+      </section>
+
+      <section class="block">
+        <div class="block-label">
+          <h3>Style général du jeu</h3>
+          <span class="idx">01.4</span>
+        </div>
+        <div class="style-board">
+          <div class="style-panel">
+            <h4>Direction</h4>
+            <ul class="wire">
+              <li><span class="k">Genre :</span> compagnon d’étude × sim carrière hockey</li>
+              <li><span class="k">Vue :</span> 2D pixel, hub lisible (patinoire / vestiaire / maison)</li>
+              <li><span class="k">Ton UI :</span> français, direct, reçus de récompense partout (<code>CareerToast</code>)</li>
+              <li><span class="k">Feel :</span> sérieux sur l’étude, fun sur le hockey — pas cartoon-culpabilisant type Duo</li>
+              <li><span class="k">Art :</span> placeholder pixel remplaçable · priorité lisibilité &gt; effets</li>
+              <li><span class="k">Audio :</span> bus simple · pas de bruitage agressif pendant focus</li>
+            </ul>
+            <div class="palette" aria-hidden="true">
+              <div class="swatch ink"><span>Encre</span></div>
+              <div class="swatch ice"><span>Glace</span></div>
+              <div class="swatch red"><span>Rink</span></div>
+              <div class="swatch blue"><span>Ligne</span></div>
+            </div>
+          </div>
+          <div>
+            <ul class="wire">
+              <li><span class="k">Réfs visuelles à noter :</span> Habitica (pixel RPG clair) · NHL scorebug (info dense) · Animal Crossing hub (mais plus « vestiaire »)</li>
+              <li><span class="k">Anti-réfs :</span> casino UI · glow néon · overload de badges à chaque clic</li>
+              <li><span class="k">Plateformes :</span> macOS d’abord → iOS</li>
+              <li><span class="k">Sauvegarde :</span> locale JSON maintenant · Supabase plus tard (hors scope immédiat)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="block-label">
+          <h3>Captures d’écran</h3>
+          <span class="idx">01.5</span>
+        </div>
+        <p class="lede">Remplacer les cadres par des images dans <code>captures/</code> (ex. <code>&lt;img src="captures/studyquest-boss.png" alt="…"&gt;</code>).</p>
+        <div class="shots">
+          <div class="shot">
+            <span class="cap">Capture 01 · StudyQuest</span>
+            <p class="hint">Écran catalogue de jeux ou une partie (Boss Battle / Study Siege).</p>
+          </div>
+          <div class="shot">
+            <span class="cap">Capture 02 · Concurrent #2</span>
+            <p class="hint">Habitica avatar / Forest timer / CRAMMIT arena — au choix.</p>
+          </div>
+          <div class="shot">
+            <span class="cap">Capture 03 · Study Rink hub</span>
+            <p class="hint">Ton hub actuel (entraînement / matchs / maison).</p>
+          </div>
+          <div class="shot">
+            <span class="cap">Capture 04 · Reçu carrière</span>
+            <p class="hint">CareerToast après une session focus ou révision de cartes.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="two-col">
+          <div class="callout obstacle">
+            <h4>Obstacles / questions ouvertes</h4>
+            <ul class="wire">
+              <li>Comment parler du différenciateur en 20 s sans jargon <code>CareerLedger</code> ?</li>
+              <li>Art placeholder : OK pour mentor, ou besoin d’1 écran « vision » plus clean ?</li>
+              <li>Scope mentor : prioriser polish UX étude, ou profondeur carrière hockey ?</li>
+              <li>IA cartes (L6) : démarrer recherche API maintenant ou après la période polish ?</li>
+            </ul>
+          </div>
+          <div class="callout next">
+            <h4>Prochaine période (brouillon)</h4>
+            <ul class="wire">
+              <li>Finir 4–6 captures + 1 paragraphe « ce que j’ai joué »</li>
+              <li>Lister 3 décisions produit issues de la veille</li>
+              <li>Choisir 1 chantier technique pour la période 02 (ex. polish hub / L6 spike)</li>
+              <li>Préparer démo 3 min pour le mentor</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="block-label">
+          <h3>Fait aujourd’hui (25 oct. 2026)</h3>
+          <span class="idx">01.6</span>
+        </div>
+        <ul class="wire">
+          <li>Création du journal de bord (format HTML unique, périodes de 2 sem.)</li>
+          <li>Veille initiale : StudyQuest games + CRAMMIT, FlashQuest, Habitica, Forest, Quizlet/Kahoot, Duolingo, Stackd/Qardex</li>
+          <li>Synthèse positionnement + notes features / style pour démarrer la phase recherche</li>
+        </ul>
+      </section>
+    </article>
+
+    <!-- ========== PÉRIODE TYPE (à dupliquer) ========== -->
+    <article class="period template" id="periode-type">
+      <header class="period-head">
+        <div class="period-num">0X</div>
+        <div class="period-title">
+          <h2>Titre de la période</h2>
+          <div class="phase">Phase · …</div>
+        </div>
+        <div class="period-dates">
+          <strong>JJ mois → JJ mois 2026</strong>
+          Rencontre mentor n°
+        </div>
+      </header>
+
+      <section class="block">
+        <div class="block-label"><h3>Objectif</h3><span class="idx">X.1</span></div>
+        <ul class="blank-lines" aria-hidden="true"><li></li><li></li></ul>
+      </section>
+
+      <section class="block">
+        <div class="block-label"><h3>Fait (notes télégraphiques)</h3><span class="idx">X.2</span></div>
+        <ul class="blank-lines" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li></ul>
+      </section>
+
+      <section class="block">
+        <div class="block-label"><h3>Détails d’implémentation</h3><span class="idx">X.3</span></div>
+        <ul class="blank-lines" aria-hidden="true"><li></li><li></li><li></li><li></li></ul>
+      </section>
+
+      <section class="block">
+        <div class="block-label"><h3>Obstacles</h3><span class="idx">X.4</span></div>
+        <ul class="blank-lines" aria-hidden="true"><li></li><li></li><li></li></ul>
+      </section>
+
+      <section class="block">
+        <div class="block-label"><h3>Captures</h3><span class="idx">X.5</span></div>
+        <div class="shots">
+          <div class="shot"><span class="cap">Capture A</span><p class="hint">Légende…</p></div>
+          <div class="shot"><span class="cap">Capture B</span><p class="hint">Légende…</p></div>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="block-label"><h3>Pour la prochaine rencontre</h3><span class="idx">X.6</span></div>
+        <ul class="blank-lines" aria-hidden="true"><li></li><li></li><li></li></ul>
+      </section>
+    </article>
+
+    <footer class="doc-foot">
+      <span>Study Rink · Journal de bord</span>
+      <span>Fichier vivant — ajouter une période avant chaque rencontre</span>
+    </footer>
+  </div>
+</body>
+</html>
